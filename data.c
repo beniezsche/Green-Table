@@ -1,15 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CHUNK 12;
 
-#define ROWS 4
-#define COLUMNS 2
+#define ROWS 50
+#define COLUMNS 100
 
-struct Cell {
+typedef struct Cell {
     int content_int;
+    float content_float;
     char content_string[50];
-};
+} Cell;
 
 int main() {
 
@@ -33,17 +33,17 @@ int main() {
         
     // }
 
-    int rows = 5;
-    int columns = 2;
+    int rows = ROWS;
+    int columns = COLUMNS;
 
 
-    struct Cell cells[rows][columns];
+    Cell cells[rows][columns];
 
-    for(int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            cells[i][j].content_int = j + 1;
-        }
-    }
+    // for(int i = 0; i < rows; i++) {
+    //     for (int j = 0; j < columns; j++) {
+    //         cells[i][j].content_int = j + 1;
+    //     }
+    // }
 
     for(int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
@@ -52,13 +52,9 @@ int main() {
         printf("\n");
     }
 
+    char a = 70;
 
-
-
-
-    
-
-
+    printf("\n%c\n", a);
 
     return 0;
 }
