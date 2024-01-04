@@ -6,9 +6,50 @@
 int main() {	
     initscr();			/* Start curses mode 		  */
     printw("Hello World !!!");	/* Print Hello World		  */
-    refresh();			/* Print it on to the real screen */
-    getch();			/* Wait for user input */
-    endwin();			/* End curses mode		  */
+    		/* Print it on to the real screen */
+    // getch();		/* Wait for user input */
+
+    noecho();
+
+    int y = 0;
+    int x = 0;
+
+    while(true) {
+
+        int in = getch();
+
+        // printf("%d", in);
+
+        switch(in) {
+            case 'e':
+                printw("e pressed");
+                refresh();
+                // endwin();
+                break;
+            case 'w':
+                y--;
+                move(y, x);
+                break;
+            case 's':
+                y++;
+                move(y, x);
+                refresh();
+                break;
+            case 'a':
+                x--;
+                move(y, x);
+                break;
+            case 'd':
+                x++;
+                move(y, x);
+                break;
+            default:
+                endwin();
+                break;
+        }
+
+    }
+
 
     return 0;
 }
