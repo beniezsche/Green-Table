@@ -2,49 +2,75 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ncurses.h>
+#include <string.h>
+
+
+void drawGrid(int x, char string[]) {
+    move(3,0);
+    printw("%s", string);
+    move(1,x);  
+}
+
+void clearText() {
+    for(int i = 0; i < COLS; i++) {
+        addch(' ');
+    }
+}
 
 int main() {	
     initscr();			/* Start curses mode 		  */
-    printw("Hello World !!!");	/* Print Hello World		  */
+    printw("Welcome To Green Table");	/* Print Hello World		  */
     		/* Print it on to the real screen */
     // getch();		/* Wait for user input */
 
     noecho();
+    keypad(stdscr, TRUE); // Enable special keys
 
     int y = 0;
     int x = 0;
+    move(1,0);
+
+    char string[10];
 
     while(true) {
 
+        drawGrid(x, string);
+
+        refresh();
+
         int in = getch();
 
-        // printf("%d", in);
-
         switch(in) {
-            case 'e':
-                printw("e pressed");
-                refresh();
-                // endwin();
+            case '\n':
+                move(1,0);
+                clearText();
+                move(1,0);
+                // strcpy(string, "Hello");
+                x = 0;
                 break;
-            case 'w':
+            case KEY_UP:
                 y--;
-                move(y, x);
+                //move(y, x);
                 break;
-            case 's':
+            case KEY_DOWN:
                 y++;
-                move(y, x);
-                refresh();
+                //move(y, x);
                 break;
-            case 'a':
+            case KEY_LEFT:
                 x--;
-                move(y, x);
+                //move(y, x);
                 break;
-            case 'd':
+            case KEY_RIGHT:
                 x++;
-                move(y, x);
+                //move(y, x);
+                break;
+            case KEY_BACKSPACE:
                 break;
             default:
-                endwin();
+                printw("%c", (char) in);
+                string[x] = in;
+                x++;
+                refresh();
                 break;
         }
 
@@ -53,6 +79,7 @@ int main() {
 
     return 0;
 }
+
 
 // int main() {
 
