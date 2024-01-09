@@ -5,9 +5,15 @@
 #include <string.h>
 
 
-void drawGrid(int x, char string[]) {
+// void drawGrid(int x, int y, char strings[][10]) {
+//     move(y,0);
+//     printw("%s", strings[y]);
+//     move(1,x);  
+// }
+
+void drawGrid(int x, int y, char string[]) {
     move(3,0);
-    printw("%s", string);
+    printw("%s size:%ld", string, sizeof(string));
     move(1,x);  
 }
 
@@ -19,9 +25,13 @@ void clearText() {
 
 int main() {	
     initscr();			/* Start curses mode 		  */
+    start_color();
+    init_pair(1,2,0);
+    attron(COLOR_PAIR(1));
     printw("Welcome To Green Table");	/* Print Hello World		  */
     		/* Print it on to the real screen */
     // getch();		/* Wait for user input */
+    // attroff();
 
     noecho();
     keypad(stdscr, TRUE); // Enable special keys
@@ -30,11 +40,13 @@ int main() {
     int x = 0;
     move(1,0);
 
-    char string[10];
+    char string[5][10];
+
+    char string_limit_test[10];
 
     while(true) {
 
-        drawGrid(x, string);
+        drawGrid(x, y, string_limit_test);
 
         refresh();
 
@@ -47,6 +59,7 @@ int main() {
                 move(1,0);
                 // strcpy(string, "Hello");
                 x = 0;
+                y++;
                 break;
             case KEY_UP:
                 y--;
@@ -65,10 +78,11 @@ int main() {
                 //move(y, x);
                 break;
             case KEY_BACKSPACE:
+                x--;
                 break;
             default:
                 printw("%c", (char) in);
-                string[x] = in;
+                string_limit_test[x] = in;
                 x++;
                 refresh();
                 break;
