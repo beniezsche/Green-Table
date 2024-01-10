@@ -8,7 +8,6 @@
 typedef struct {
     float value;
     char* label;
-    char* text;
 } Cell;
 
 // Maximum number of columns
@@ -23,7 +22,6 @@ void initializeCells() {
         for (int col = 0; col < MAX_COLUMNS; ++col) {
             cells[row][col].value = 0.0;
             cells[row][col].label = NULL;
-            cells[row][col].text = NULL;
         }
     }
 }
@@ -38,17 +36,19 @@ int getTerminalWidth() {
 // Function to display the table using ncurses
 void displayTable(int currentRow, int currentCol, int displayedColumns) {
     clear();
+    
+    // Display the input field at the top left corner
+    // mvprintw(0, 0, "Enter value: ");
 
     // Set colors for headers
     attron(COLOR_PAIR(1));
 
-    // Display the input field at the top left corner
-    mvprintw(0, 0, "Enter value: ");
 
     // Display column headers
     for (int col = 0; col < displayedColumns; ++col) {
         int actualCol = col + (currentCol / displayedColumns) * displayedColumns;
-        mvprintw(1, 10 * (col + 1), "%c", 'A' + actualCol);
+        if(actualCol < MAX_COLUMNS)
+            mvprintw(1, (10 * (col)) + 2, "     %c    ", 'A' + actualCol);
     }
 
     // Display row headers
@@ -67,6 +67,9 @@ void displayTable(int currentRow, int currentCol, int displayedColumns) {
         for (int col = 0; col < displayedColumns; ++col) {
             int actualCol = col + (currentCol / displayedColumns) * displayedColumns;
 
+            if(actualCol >= MAX_COLUMNS)
+                break; 
+
             if (row == currentRow && actualCol == currentCol) {
                 attron(COLOR_PAIR(2)); // Highlight the current cell
             } else {
@@ -74,10 +77,8 @@ void displayTable(int currentRow, int currentCol, int displayedColumns) {
                 attron(COLOR_PAIR(3));
             }
 
-            if (cells[row][actualCol].text != NULL) {
-                printw("%-10s ", cells[row][actualCol].text);
-            } else if (cells[row][actualCol].label != NULL) {
-                printw("%-10s ", cells[row][actualCol].label);
+            if (cells[row][actualCol].label != NULL) {
+                printw("%-10s", cells[row][actualCol].label);
             } else {
                 printw("          "); // Blank space
             }
@@ -92,6 +93,8 @@ void displayTable(int currentRow, int currentCol, int displayedColumns) {
     }
 
     refresh();
+
+    move(0,0);
 }
 
 // Function to handle user input and update the cells
@@ -117,18 +120,16 @@ void handleUserInput() {
                 break;
             case '\n': // Enter key
                 echo();
-                mvprintw(0, 13, "                         "); // Clear the previous input
-                mvprintw(0, 13, "Enter value: ");
+                // mvprintw(0, 0, "                         "); // Clear the previous input
+                // mvprintw(0, 0, "Enter value: ");
                 scanw("%9s", inputBuffer);
                 noecho();
 
                 // Update the current cell with the entered value
                 if (strlen(inputBuffer) > 0) {
-                    cells[currentRow][currentCol].text = strdup(inputBuffer);
                     cells[currentRow][currentCol].value = 0.0;
-                    cells[currentRow][currentCol].label = NULL;
+                    cells[currentRow][currentCol].label = strdup(inputBuffer);
                 } else {
-                    cells[currentRow][currentCol].text = NULL;
                     cells[currentRow][currentCol].value = 0.0;
                     cells[currentRow][currentCol].label = NULL;
                 }
@@ -155,7 +156,7 @@ int main() {
     // Define color pairs
     init_pair(1, COLOR_WHITE, COLOR_GREEN); // Color for headers
     init_pair(2, COLOR_WHITE, COLOR_BLUE);  // Color for the current cell
-    init_pair(3, COLOR_GREEN, COLOR_BLACK);          // Color for individual cells based on the original terminal window color
+    init_pair(3, COLOR_GREEN, COLOR_BLACK); // Color for individual cells based on the original terminal window color
 
     initializeCells();
 
