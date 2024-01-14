@@ -20,7 +20,7 @@ Cell cells[12][MAX_COLUMNS];
 void initializeCells() {
     for (int row = 0; row < 12; ++row) {
         for (int col = 0; col < MAX_COLUMNS; ++col) {
-            cells[row][col].value = 0.0;
+            cells[row][col].value = -1;
             cells[row][col].label = NULL;
         }
     }
@@ -48,12 +48,7 @@ void displayTable(int currentRow, int currentCol, int displayedColumns) {
     for (int col = 0; col < displayedColumns; ++col) {
         int actualCol = col + (currentCol / displayedColumns) * displayedColumns;
         if(actualCol < MAX_COLUMNS)
-            mvprintw(1, (10 * (col)) + 2, "     %c    ", 'A' + actualCol);
-    }
-
-    // Display row headers
-    for (int row = 0; row < 12; ++row) {
-        mvprintw(2 + row, 0, "%2d", row + 1);
+            mvprintw(2, (10 * (col)) + 3, "     %c    ", 'A' + actualCol);
     }
 
     attroff(COLOR_PAIR(1));
@@ -61,7 +56,7 @@ void displayTable(int currentRow, int currentCol, int displayedColumns) {
     for (int row = 0; row < 12; ++row) {
         // Display row headers
         attron(COLOR_PAIR(1));
-        mvprintw(2 + row, 0, "%2d", row + 1);
+        mvprintw(3 + row, 0, "%3d", row + 1);
         attroff(COLOR_PAIR(1));
 
         for (int col = 0; col < displayedColumns; ++col) {
@@ -78,8 +73,42 @@ void displayTable(int currentRow, int currentCol, int displayedColumns) {
             }
 
             if (cells[row][actualCol].label != NULL) {
-                printw("%-10s", cells[row][actualCol].label);
-            } else {
+                int len = strlen(cells[row][actualCol].label);
+
+                for(int l = 0; l < 10; l++) {
+                    printw("%c", cells[row][actualCol].label[l]);
+                }
+
+                for(int spc = 0; spc < 10 - len; spc++) {
+                    printw(" ");
+                }
+
+                // printw("%-.10s", cells[row][actualCol].label);
+                // printw("%-10ld", strlen(cells[row][actualCol].label));
+            } 
+            else if(cells[row][actualCol].value != -1) {
+
+                float val = cells[row][actualCol].value;
+
+                char rep[10];
+
+                sprintf(rep, "%.02f", val);
+
+                int len = strlen(rep);
+
+                for(int spc = 0; spc < 10 - len; spc++) {
+                    printw(" ");
+                }
+
+                for(int l = 0; l < 10; l++) {
+                    printw("%c", rep[l]);
+                }
+
+                
+
+                // printw("%s", rep);
+            } 
+            else {
                 printw("          "); // Blank space
             }
 
@@ -102,7 +131,7 @@ void handleUserInput() {
     int ch;
     int currentRow = 0;
     int currentCol = 0;
-    char inputBuffer[10];
+    char inputBuffer[20];
 
     while ((ch = getch()) != KEY_F(1)) {
         switch (ch) {
@@ -122,18 +151,42 @@ void handleUserInput() {
                 echo();
                 // mvprintw(0, 0, "                         "); // Clear the previous input
                 // mvprintw(0, 0, "Enter value: ");
-                scanw("%9s", inputBuffer);
+                scanw("%[^\n]", inputBuffer);
                 noecho();
 
                 // Update the current cell with the entered value
-                if (strlen(inputBuffer) > 0) {
+                if (strlen(inputBuffer) > 0) {         
+
                     cells[currentRow][currentCol].value = 0.0;
-                    cells[currentRow][currentCol].label = strdup(inputBuffer);
+                    cells[currentRow][currentCol].label = NULL;           
+
+                    // char str[] = strdup(inputBuffer);
+                    char *endptr;
+
+                    float result = strtof(inputBuffer, &endptr);
+
+                    if (*endptr != '\0') {
+                        // Conversion failed
+                        printf("Conversion failed. Not a valid integer.\n");
+                        cells[currentRow][currentCol].label = strdup(inputBuffer);
+
+                    } else {
+                        // Conversion successful
+                        printf("Converted value: %.02f\n", result);
+                        cells[currentRow][currentCol].value = result;
+
+                    }   
+
+                    // cells[currentRow][currentCol].value = 0.0;
+                    // cells[currentRow][currentCol].label = strdup(c);
                 } else {
                     cells[currentRow][currentCol].value = 0.0;
                     cells[currentRow][currentCol].label = NULL;
                 }
                 break;
+            default:
+                break;
+
         }
 
         // Recalculate the number of displayed columns based on the current terminal width
@@ -155,9 +208,9 @@ int main() {
 
     // Define color pairs
     init_pair(1, COLOR_WHITE, COLOR_GREEN); // Color for headers
-    init_pair(2, COLOR_WHITE, COLOR_BLUE);  // Color for the current cell
+    init_pair(2, COLOR_WHITE, COLOR_GREEN);  // Color for the current cell
     init_pair(3, COLOR_GREEN, COLOR_BLACK); // Color for individual cells based on the original terminal window color
-
+    // use_default_colors();
     initializeCells();
 
     // Get the initial terminal width and set the initial number of displayed columns
