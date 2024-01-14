@@ -56,6 +56,12 @@ int main() {
 
     printf("\n%c\n", a);
 
+    long int lim = 1000000000;
+
+    for(int i = 0; i < lim ; i++) {
+        printf("%d", i);
+    }
+
     return 0;
 }
 
