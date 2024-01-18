@@ -18,4 +18,4 @@ There will a main.out file created in the same folder. To run it:
 
 ## Screenshot
 
-![](https://github.com/Green-Table/scrolling_preview.gif)
+![](https://github.com/Green-Table/screenshot/scrolling_preview.gif)
