@@ -1,4 +1,4 @@
-#Green Table [WIP]
+# Green Table [WIP]
 
 Green Table is a rendition of VisiCalc written in C. The idea is to build a limited - feature version of VisiCalc to understand how a spreadsheet functions.
 
