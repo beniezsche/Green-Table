@@ -20,6 +20,9 @@ typedef struct {
 // Create a 2D array of Cells (MAX_COLUMNS columns x MAX_ROWS rows)
 Cell cells[MAX_ROWS][MAX_COLUMNS];
 
+int isTyping = 0;
+char inputBuffer[10];   
+
 // Function to initialize the cells
 void initializeCells() {
 
@@ -39,6 +42,14 @@ int getTerminalWidth() {
     return w.ws_col;
 }
 
+int x = 0;
+
+
+int displayInput() {
+    mvprintw(2,0, "%s", inputBuffer);
+    // refresh();
+}
+
 // Function to display the table using ncurses
 void displayTable(int currentRow, int currentCol, int displayedColumns, int displayedRows) {
     clear();
@@ -46,6 +57,24 @@ void displayTable(int currentRow, int currentCol, int displayedColumns, int disp
     // Display the input field at the top left corner
     // mvprintw(0, 0, "Enter value: ");
 
+    attron(COLOR_PAIR(1));
+
+    char* welcomemsg = "Welcome To Green Table v1.0";
+
+    mvprintw(0,0, "%s", welcomemsg);
+
+    for(int i = strlen(welcomemsg); i < COLS ; i++) {
+        mvprintw(0,i, " ");
+    }
+
+    for(int i = 0; i < COLS ; i++) {
+        mvprintw(1,i, " ");
+    }
+
+
+    attroff(COLOR_PAIR(1));
+
+    displayInput();
     // Set colors for headers
     attron(COLOR_PAIR(1));
 
@@ -54,7 +83,7 @@ void displayTable(int currentRow, int currentCol, int displayedColumns, int disp
     for (int col = 0; col < displayedColumns; ++col) {
         int actualCol = col + (currentCol / displayedColumns) * displayedColumns;
         if(actualCol < MAX_COLUMNS)
-            mvprintw(2, (10 * (col)) + 3, "     %c    ", 'A' + actualCol);
+            mvprintw(3, (10 * (col)) + 3, "     %c    ", 'A' + actualCol);
     }
 
     attroff(COLOR_PAIR(1));
@@ -68,7 +97,7 @@ void displayTable(int currentRow, int currentCol, int displayedColumns, int disp
         if(actualRow >= MAX_ROWS)
             break;
 
-        mvprintw(row + 3, 0, "%3d", actualRow + 1);
+        mvprintw(row + 4, 0, "%3d", actualRow + 1);
         attroff(COLOR_PAIR(1));
 
         for (int col = 0; col < displayedColumns; ++col) {
@@ -133,7 +162,7 @@ void displayTable(int currentRow, int currentCol, int displayedColumns, int disp
 
     refresh();
 
-    move(0,0);
+    move(2,x);
 }
 
 
@@ -142,7 +171,9 @@ void handleUserInput() {
     int ch;
     int currentRow = 0;
     int currentCol = 0;
-    char inputBuffer[20];
+    // char inputBuffer[10];
+
+    echo();
 
     while ((ch = getch()) != KEY_F(1)) {
         switch (ch) {
@@ -159,11 +190,8 @@ void handleUserInput() {
                 currentCol = (currentCol + 1 < MAX_COLUMNS) ? currentCol + 1 : MAX_COLUMNS - 1;
                 break;
             case '\n': // Enter key
-                echo();
-                // mvprintw(0, 0, "                         "); // Clear the previous input
-                // mvprintw(0, 0, "Enter value: ");
-                scanw("%[^\n]", inputBuffer);
-                noecho();
+                x = 0;
+                //scanw("%[^\n]", inputBuffer);
 
                 // Update the current cell with the entered value
                 if (strlen(inputBuffer) > 0) {       
@@ -203,20 +231,21 @@ void handleUserInput() {
                         cells[currentRow][currentCol].label = NULL;
                         cells[currentRow][currentCol].value = (float) sum;
                     }
-                    // else {
-                    //     cells[currentRow][currentCol].label = strdup("not");
-                    // }
-
-                    // cells[currentRow][currentCol].value = 0.0;
-                    // cells[currentRow][currentCol].label = strdup(c);
-                } else {
-                    // cells[currentRow][currentCol].value = 0.0;
-                    // cells[currentRow][currentCol].label = NULL;
                 }
+
+                // inputBuffer[0] = '\0';
+                memset(inputBuffer,0,sizeof(inputBuffer));
+                break;
+
+            case KEY_BACKSPACE:
+                inputBuffer[x] = ' ';
+                if (x > 0)
+                    x--;
                 break;
             default:
+                inputBuffer[x] = ch;
+                x++;
                 break;
-
         }
 
         // Recalculate the number of displayed columns based on the current terminal width
@@ -234,7 +263,7 @@ void handleUserInput() {
 int main() {
     initscr();      // Initialize the library
     cbreak();       // Disable line buffering
-    noecho();       // Don't echo input
+    //noecho();       // Don't echo input
     keypad(stdscr, TRUE); // Enable special keys
 
     start_color();  // Enable color support
