@@ -1,184 +1,262 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
 #include <ncurses.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <stdlib.h>
 #include <string.h>
 
+// Define the Cell data type
+typedef struct {
+    float value;
+    char* label;
+    char alignment;
+} Cell;
 
-// void drawGrid(int x, int y, char strings[][10]) {
-//     move(y,0);
-//     printw("%s", strings[y]);
-//     move(1,x);  
-// }
+// Maximum number of columns
+#define MAX_COLUMNS 26
+#define MAX_ROWS 255
 
-void drawGrid(int x, int y, char string[]) {
-    move(3,0);
-    printw("%s size:%ld", string, sizeof(string));
-    move(1,x);  
-}
+#define COLUMN_WIDTH 10
 
-void clearText() {
-    for(int i = 0; i < COLS; i++) {
-        addch(' ');
+// Create a 2D array of Cells (MAX_COLUMNS columns x MAX_ROWS rows)
+Cell cells[MAX_ROWS][MAX_COLUMNS];
+
+// Function to initialize the cells
+void initializeCells() {
+
+    for (int row = 0; row < MAX_ROWS; ++row) {
+        for (int col = 0; col < MAX_COLUMNS; ++col) {
+            cells[row][col].value = -1;
+            cells[row][col].label = NULL;
+            cells[row][col].alignment = 'l';
+        }
     }
 }
 
-int main() {	
-    initscr();			/* Start curses mode 		  */
-    start_color();
-    init_pair(1,2,0);
+// Function to get the current terminal width
+int getTerminalWidth() {
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    return w.ws_col;
+}
+
+// Function to display the table using ncurses
+void displayTable(int currentRow, int currentCol, int displayedColumns, int displayedRows) {
+    clear();
+    
+    // Display the input field at the top left corner
+    // mvprintw(0, 0, "Enter value: ");
+
+    // Set colors for headers
     attron(COLOR_PAIR(1));
-    printw("Welcome To Green Table");	/* Print Hello World		  */
-    		/* Print it on to the real screen */
-    // getch();		/* Wait for user input */
-    // attroff();
 
-    noecho();
-    keypad(stdscr, TRUE); // Enable special keys
 
-    int y = 0;
-    int x = 0;
-    move(1,0);
+    // Display column headers
+    for (int col = 0; col < displayedColumns; ++col) {
+        int actualCol = col + (currentCol / displayedColumns) * displayedColumns;
+        if(actualCol < MAX_COLUMNS)
+            mvprintw(2, (10 * (col)) + 3, "     %c    ", 'A' + actualCol);
+    }
 
-    char string[5][10];
+    attroff(COLOR_PAIR(1));
 
-    char string_limit_test[10];
+    for (int row = 0; row < displayedRows; ++row) {
+        // Display row headers
+        attron(COLOR_PAIR(1));
 
-    while(true) {
+        int actualRow = row + (currentRow / displayedRows) * displayedRows;
 
-        drawGrid(x, y, string_limit_test);
+        if(actualRow >= MAX_ROWS)
+            break;
 
-        refresh();
+        mvprintw(row + 3, 0, "%3d", actualRow + 1);
+        attroff(COLOR_PAIR(1));
 
-        int in = getch();
+        for (int col = 0; col < displayedColumns; ++col) {
+            int actualCol = col + (currentCol / displayedColumns) * displayedColumns;
 
-        switch(in) {
-            case '\n':
-                move(1,0);
-                clearText();
-                move(1,0);
-                // strcpy(string, "Hello");
-                x = 0;
-                y++;
-                break;
+            if(actualCol >= MAX_COLUMNS)
+                break; 
+
+            if (actualRow == currentRow && actualCol == currentCol) {
+                attron(COLOR_PAIR(2)); // Highlight the current cell
+            } else {
+                // Set color for individual cells based on the original terminal window color
+                attron(COLOR_PAIR(3));
+            }
+
+            if (cells[actualRow][actualCol].label != NULL) {
+                int len = strlen(cells[actualRow][actualCol].label);
+
+                for(int l = 0; l < 10; l++) {
+                    printw("%c", cells[actualRow][actualCol].label[l]);
+                }
+
+                for(int spc = 0; spc < 10 - len; spc++) {
+                    printw(" ");
+                }
+
+                // printw("%-.10s", cells[row][actualCol].label);
+                // printw("%-10ld", strlen(cells[row][actualCol].label));
+            } 
+            else if(cells[actualRow][actualCol].value != -1) {
+
+                float val = cells[actualRow][actualCol].value;
+
+                char rep[10];
+
+                sprintf(rep, "%.02f", val);
+
+                int len = strlen(rep);
+
+                for(int spc = 0; spc < 10 - len; spc++) {
+                    printw(" ");
+                }
+
+                for(int l = 0; l < 10; l++) {
+                    printw("%c", rep[l]);
+                }
+
+                // printw("%f", val);
+            } 
+            else {
+                printw("          "); // Blank space
+            }
+
+            if (actualRow == currentRow && actualCol == currentCol) {
+                attroff(COLOR_PAIR(2));
+            } else {
+                attroff(COLOR_PAIR(3));
+            }
+        }
+        printw("\n");
+    }
+
+    refresh();
+
+    move(0,0);
+}
+
+
+// Function to handle user input and update the cells
+void handleUserInput() {
+    int ch;
+    int currentRow = 0;
+    int currentCol = 0;
+    char inputBuffer[20];
+
+    while ((ch = getch()) != KEY_F(1)) {
+        switch (ch) {
             case KEY_UP:
-                y--;
-                //move(y, x);
+                currentRow = (currentRow - 1 >= 0) ? currentRow - 1 : 0;
                 break;
             case KEY_DOWN:
-                y++;
-                //move(y, x);
+                currentRow = (currentRow + 1 < MAX_ROWS) ? currentRow + 1 : MAX_ROWS - 1;
                 break;
             case KEY_LEFT:
-                x--;
-                //move(y, x);
+                currentCol = (currentCol - 1 >= 0) ? currentCol - 1 : 0;
                 break;
             case KEY_RIGHT:
-                x++;
-                //move(y, x);
+                currentCol = (currentCol + 1 < MAX_COLUMNS) ? currentCol + 1 : MAX_COLUMNS - 1;
                 break;
-            case KEY_BACKSPACE:
-                x--;
+            case '\n': // Enter key
+                echo();
+                // mvprintw(0, 0, "                         "); // Clear the previous input
+                // mvprintw(0, 0, "Enter value: ");
+                scanw("%[^\n]", inputBuffer);
+                noecho();
+
+                // Update the current cell with the entered value
+                if (strlen(inputBuffer) > 0) {       
+
+
+                    cells[currentRow][currentCol].value = 0.0;
+                    cells[currentRow][currentCol].label = NULL;           
+
+                    // char str[] = strdup(inputBuffer);
+                    char *endptr;
+
+                    float result = strtof(inputBuffer, &endptr);
+
+                    if (*endptr != '\0') {
+                        // Conversion failed
+                        printf("Conversion failed. Not a valid integer.\n");
+                        cells[currentRow][currentCol].label = strdup(inputBuffer);
+
+                    } else {
+                        // Conversion successful
+                        printf("Converted value: %.02f\n", result);
+                        cells[currentRow][currentCol].value = result;
+
+                    }   
+
+                    if(inputBuffer[0] == '@') {
+                        //executeFunction(inputBuffer)
+                    }
+
+                    if(strcmp("@SUM", inputBuffer) == 0) {
+
+                        int sum = 0;
+                        for(int i = 0; i < 10; i++) {
+                            sum += cells[i][currentCol].value;
+                        }
+
+                        cells[currentRow][currentCol].label = NULL;
+                        cells[currentRow][currentCol].value = (float) sum;
+                    }
+                    // else {
+                    //     cells[currentRow][currentCol].label = strdup("not");
+                    // }
+
+                    // cells[currentRow][currentCol].value = 0.0;
+                    // cells[currentRow][currentCol].label = strdup(c);
+                } else {
+                    // cells[currentRow][currentCol].value = 0.0;
+                    // cells[currentRow][currentCol].label = NULL;
+                }
                 break;
             default:
-                printw("%c", (char) in);
-                string_limit_test[x] = in;
-                x++;
-                refresh();
                 break;
+
         }
 
+        // Recalculate the number of displayed columns based on the current terminal width
+        int terminalWidth = COLS; //getTerminalWidth();
+        int displayedColumns = (terminalWidth - 1) / 10; // 10 characters per column
+        displayedColumns = (displayedColumns > MAX_COLUMNS) ? MAX_COLUMNS : displayedColumns;
+
+        int terminalHeight = LINES;
+        int displayedRows = (terminalHeight - 3);
+
+        displayTable(currentRow, currentCol, displayedColumns, displayedRows);
     }
-
-
-    return 0;
 }
 
+int main() {
+    initscr();      // Initialize the library
+    cbreak();       // Disable line buffering
+    noecho();       // Don't echo input
+    keypad(stdscr, TRUE); // Enable special keys
 
-// int main() {
+    start_color();  // Enable color support
 
-//     printf("\033[2J");
+    // Define color pairs
+    init_pair(1, COLOR_WHITE, COLOR_GREEN); // Color for headers
+    init_pair(2, COLOR_WHITE, COLOR_GREEN);  // Color for the current cell
+    init_pair(3, COLOR_GREEN, COLOR_BLACK); // Color for individual cells based on the original terminal window color
+    // use_default_colors();
+    initializeCells();
 
-//     // Print a message
-//     printf("Welcome to Green Table!\n");
+    // Get the initial terminal width and set the initial number of displayed columns
+    int terminalWidth = COLS; //getTerminalWidth();
+    int displayedColumns = (terminalWidth - 1) / 10; // 10 characters per column
+    displayedColumns = (displayedColumns > MAX_COLUMNS) ? MAX_COLUMNS : displayedColumns;
 
-//     int r = 255;
-//     int g = 255;
-//     int b = 255;
+    int terminalHeight = LINES;
+    int displayedRows =  (terminalHeight - 3);
 
-//     int increment = 100;
+    displayTable(0, 0, displayedColumns, displayedRows);
+    handleUserInput();
 
-//     // printf("\033[38;2;255;82;197;48;2;155;106;0mHello This is a pink text on brown bg \n");
-//     printf("\n");
-
-    
-
-//     // int myNum = 7;
-
-//     // for(int i = 0; i < myNum; i++) {
-//     //     printf("\n");
-//     //     for(int j = 0; j < myNum; j++) {
-//     //         printf("  (%d, %d)  ", i, j);
-//     //     }
-//     // }
-
-//     for(int j = 0; j < 10; j++) {
-//         for(int i = 0; i <= 8; i++) {
-
-
-//             if (j == 0 && i == 0) {
-//                 printf("\033[0m");
-//                 printf("            ");
-//             }
-//             else if (j == 0 && i == 1) {
-//                 printf("\033[48;2;4;101;13m");
-//                 printf("     (A)    ");
-//             }
-//             else if (j == 0 && i == 2) {
-//                 printf("     (B)    ");
-//             }
-//             else if (j == 0 && i == 3) {
-//                 printf("     (C)    ");
-//             }
-//             else if (j == 0 && i == 4) {
-//                 printf("     (D)    ");
-//             }
-//             else if (j == 0 && i == 5) {
-//                 printf("     (E)    ");
-//             }
-//             else if (j == 0 && i == 6) {
-//                 printf("     (F)    ");
-//             }
-//             else if (j == 0 && i == 7) {
-//                 printf("     (G)    ");
-//             }
-//             else if (j == 0 && i == 8) {
-//                 printf("     (H)    ");
-//                 printf("\033[0m");
-//             }
-//             else if(j == 0) {
-//                 printf("\033[48;2;4;101;13m");
-//                 printf("     (%d)    ", j);
-//                 printf("\033[0m");
-//             }
-//             else if(i == 0) {
-//                 printf("\033[48;2;4;101;13m");
-//                 printf("     (%d)    ", j);
-//                 printf("\033[0m");
-//             }
-//             else {
-//                 printf("%12d",rand() % 20);
-//             }
-
-//         }
-//         printf("\n");
-//     }
-
-
-
-//     printf("\n");  
-
-
-//     return 0;
-
-// }
+    endwin();       // Cleanup and close the library
+    return 0;
+}
