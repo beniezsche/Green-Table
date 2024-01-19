@@ -269,8 +269,8 @@ int main() {
     start_color();  // Enable color support
 
     // Define color pairs
-    init_pair(1, COLOR_WHITE, COLOR_GREEN); // Color for headers
-    init_pair(2, COLOR_WHITE, COLOR_GREEN);  // Color for the current cell
+    init_pair(1, COLOR_BLACK, COLOR_GREEN); // Color for headers
+    init_pair(2, COLOR_BLACK, COLOR_GREEN);  // Color for the current cell
     init_pair(3, COLOR_GREEN, COLOR_BLACK); // Color for individual cells based on the original terminal window color
     // use_default_colors();
     initializeCells();
