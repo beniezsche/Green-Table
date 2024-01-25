@@ -1,6 +1,4 @@
 #include <ncurses.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -35,12 +33,6 @@ void initializeCells() {
     }
 }
 
-// Function to get the current terminal width
-int getTerminalWidth() {
-    struct winsize w;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    return w.ws_col;
-}
 
 int x = 0;
 
