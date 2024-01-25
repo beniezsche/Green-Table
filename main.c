@@ -39,7 +39,6 @@ int x = 0;
 
 int displayInput() {
     mvprintw(2,0, "%s", inputBuffer);
-    // refresh();
 }
 
 // Function to display the table using ncurses
@@ -235,8 +234,11 @@ void handleUserInput() {
                     x--;
                 break;
             default:
-                inputBuffer[x] = ch;
-                x++;
+                if (x < 10) {
+                    inputBuffer[x] = ch;
+                    x++;
+                }
+
                 break;
         }
 
