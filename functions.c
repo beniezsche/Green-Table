@@ -101,9 +101,6 @@ Token* tokenize_visicalc_formula(const char* formula) {
                 exit(EXIT_FAILURE);
             }
 
-    
-
-    
         } else if (*formula == '(' || *formula == ')') {
             // Parentheses (for simplicity, treat them as separate tokens)
             tokens[token_count].value = malloc(2);
@@ -111,7 +108,7 @@ Token* tokenize_visicalc_formula(const char* formula) {
             tokens[token_count].value[1] = '\0';
             tokens[token_count].type = *formula == '(' ? SYMBOL : END_OF_FORMULA;
             formula++;
-        } else if (*formula == ' ') {
+        } else if (*formula == ' ' || *formula == '\n') {
             // Ignore whitespace
             formula++;
             continue;
@@ -144,12 +141,34 @@ void print_tokens(Token* tokens) {
     }
 }
 
+int validate_tokens(Token* tokens) {
+    if(tokens[0].type == FUNCTION &&
+        tokens[1].type == SYMBOL &&
+        tokens[2].type == CELL_REFERENCE &&
+        tokens[3].type == RANGE_SEPARATOR &&
+        tokens[4].type == CELL_REFERENCE &&
+        tokens[5].type == END_OF_FORMULA)
+        return 1;
+    else 
+        return 0;
+}
+
 
 
 int main() {
-    const char* visicalc_formula = "SUM(SUM...C10)";
+    char visicalc_formula[20] ;
+
+    // scanf("%s" ,visicalc_formula);
+
+    fgets(visicalc_formula, sizeof(visicalc_formula), stdin);
+
     Token* tokens = tokenize_visicalc_formula(visicalc_formula);
     print_tokens(tokens);
+
+    if (validate_tokens(tokens) == 1)
+        printf("\nTokens validated\n");
+    
+
     free_tokens(tokens);
 
     return 0;
