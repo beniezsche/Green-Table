@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "functions.h"
+
 // Define the Cell data type
 typedef struct {
     float value;
@@ -19,7 +21,7 @@ typedef struct {
 Cell cells[MAX_ROWS][MAX_COLUMNS];
 
 int isTyping = 0;
-char inputBuffer[10];   
+char inputBuffer[20];   
 
 // Function to initialize the cells
 void initializeCells() {
@@ -208,20 +210,21 @@ void handleUserInput() {
 
                     }   
 
-                    if(inputBuffer[0] == '@') {
-                        //executeFunction(inputBuffer)
-                    }
+                    // if(inputBuffer[0] == '@') {
+                    //     // executeFunction(inputBuffer)
+                    //     process_function(inputBuffer);
+                    // }
 
-                    if(strcmp("@SUM", inputBuffer) == 0) {
+                    // if(inputBuffer[0] == '@') {
 
-                        int sum = 0;
-                        for(int i = 0; i < 10; i++) {
-                            sum += cells[i][currentCol].value;
-                        }
+                    //     int sum = 0;
+                    //     for(int i = 0; i < 10; i++) {
+                    //         sum += cells[i][currentCol].value;
+                    //     }
 
-                        cells[currentRow][currentCol].label = NULL;
-                        cells[currentRow][currentCol].value = (float) sum;
-                    }
+                    //     cells[currentRow][currentCol].label = NULL;
+                    //     cells[currentRow][currentCol].value = (float) sum;
+                    // }
                 }
 
                 // inputBuffer[0] = '\0';
@@ -234,7 +237,7 @@ void handleUserInput() {
                     x--;
                 break;
             default:
-                if (x < 10) {
+                if (x < 20) {
                     inputBuffer[x] = ch;
                     x++;
                 }

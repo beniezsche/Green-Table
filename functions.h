@@ -3,7 +3,14 @@
 #include <string.h>
 #include <ctype.h>
 
+
+enum OPERATIONS{
+    SUM,
+    AVG
+} ;
+
 typedef enum {
+    FUNCTION_START,
     CELL_REFERENCE,
     FUNCTION,
     SYMBOL,
@@ -60,12 +67,19 @@ Token* tokenize_visicalc_formula(const char* formula) {
 
                 if(isdigit(*formula))
                     isCellRef = 1;
+
+                if(length > 0) {
+
+                    if(isdigit(*formula) && isalpha(*(formula + 1)))
+                        isCellRef = 0;
+                }
+
             }
             char* identifier = malloc(length + 1);
             strncpy(identifier, formula - length, length);
             identifier[length] = '\0';
 
-            // Check if it's a function (for simplicity, assume any alphabetical token is a function)
+            // Check if it's a function or cell reference (for simplicity, assume any alphabetical token is a function)
             tokens[token_count].value = identifier;
             if(!isCellRef)
                 tokens[token_count].type = FUNCTION;
@@ -108,6 +122,14 @@ Token* tokenize_visicalc_formula(const char* formula) {
             tokens[token_count].value[1] = '\0';
             tokens[token_count].type = *formula == '(' ? SYMBOL : END_OF_FORMULA;
             formula++;
+        } 
+        else if(*formula == '@') {
+            tokens[token_count].value = malloc(2);
+            tokens[token_count].value[0] = *formula;
+            tokens[token_count].value[1] = '\0';
+            tokens[token_count].type = FUNCTION_START;
+            formula++;
+            
         } else if (*formula == ' ' || *formula == '\n') {
             // Ignore whitespace
             formula++;
@@ -142,34 +164,51 @@ void print_tokens(Token* tokens) {
 }
 
 int validate_tokens(Token* tokens) {
-    if(tokens[0].type == FUNCTION &&
-        tokens[1].type == SYMBOL &&
-        tokens[2].type == CELL_REFERENCE &&
-        tokens[3].type == RANGE_SEPARATOR &&
-        tokens[4].type == CELL_REFERENCE &&
-        tokens[5].type == END_OF_FORMULA)
+    if( tokens[0].type == FUNCTION_START &&
+        tokens[1].type == FUNCTION &&
+        tokens[2].type == SYMBOL &&
+        tokens[3].type == CELL_REFERENCE &&
+        tokens[4].type == RANGE_SEPARATOR &&
+        tokens[5].type == CELL_REFERENCE &&
+        tokens[6].type == END_OF_FORMULA)
         return 1;
     else 
         return 0;
 }
 
+void process_function(char* input) {
 
-
-int main() {
-    char visicalc_formula[20] ;
-
-    // scanf("%s" ,visicalc_formula);
-
-    fgets(visicalc_formula, sizeof(visicalc_formula), stdin);
-
-    Token* tokens = tokenize_visicalc_formula(visicalc_formula);
-    print_tokens(tokens);
+    Token* tokens = tokenize_visicalc_formula(input);
+    // print_tokens(tokens);
 
     if (validate_tokens(tokens) == 1)
         printf("\nTokens validated\n");
-    
+    else 
+        printf("\nTokens not validated! Write the function correctly\n");
+
 
     free_tokens(tokens);
-
-    return 0;
 }
+
+
+
+// int main() {
+//     char visicalc_formula[20] ;
+
+//     // scanf("%s" ,visicalc_formula);
+
+//     fgets(visicalc_formula, sizeof(visicalc_formula), stdin);
+
+//     Token* tokens = tokenize_visicalc_formula(visicalc_formula);
+//     print_tokens(tokens);
+
+//     if (validate_tokens(tokens) == 1)
+//         printf("\nTokens validated\n");
+//     else 
+//         printf("\nTokens not validated! Write the function correctly\n");
+
+
+//     free_tokens(tokens);
+
+//     return 0;
+// }
