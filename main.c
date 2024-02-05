@@ -106,6 +106,7 @@ void displayTable(int currentRow, int currentCol, int displayedColumns, int disp
                 attron(COLOR_PAIR(3));
             }
 
+
             if (cells[actualRow][actualCol].label != NULL) {
                 int len = strlen(cells[actualRow][actualCol].label);
 
