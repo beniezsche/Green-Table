@@ -25,4 +25,4 @@ There will a main.out file created in the same folder. To run it:
 
 ## Screenshot
 
-![](https://github.com/beniezsche/Green-Table/blob/master/screenshot/scrolling_preview.gif)
+![](https://github.com/beniezsche/Green-Table/blob/master/screenshot/gtable.gif)
