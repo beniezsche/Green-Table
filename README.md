@@ -2,6 +2,10 @@
 
 Green Table is a rendition of VisiCalc written in C. The idea is to build a limited - feature version of VisiCalc to understand how a spreadsheet functions.
 
+## Screenshot
+
+![](https://github.com/beniezsche/Green-Table/blob/master/screenshot/gtable.gif)
+
 ## Features planned
 
 1. Functions (~~SUM~~ and AVG)
@@ -22,7 +26,3 @@ There will a main.out file created in the same folder. To run it:
 ```
 ./main.out
 ```
-
-## Screenshot
-
-![](https://github.com/beniezsche/Green-Table/blob/master/screenshot/gtable.gif)
