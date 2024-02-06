@@ -2,12 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Define the Cell data type
-typedef struct {
-    float value;
-    char* label;
-    char alignment;
-} Cell;
+#include "functions.h"
+#include "data.h"
+
+
 
 // Maximum number of columns
 #define MAX_COLUMNS 26
@@ -19,7 +17,7 @@ typedef struct {
 Cell cells[MAX_ROWS][MAX_COLUMNS];
 
 int isTyping = 0;
-char inputBuffer[10];   
+char inputBuffer[20];   
 
 // Function to initialize the cells
 void initializeCells() {
@@ -29,6 +27,7 @@ void initializeCells() {
             cells[row][col].value = -1;
             cells[row][col].label = NULL;
             cells[row][col].alignment = 'l';
+            cells[row][col].formula = NULL;
         }
     }
 }
@@ -104,10 +103,23 @@ void displayTable(int currentRow, int currentCol, int displayedColumns, int disp
                 attron(COLOR_PAIR(3));
             }
 
-            if (cells[actualRow][actualCol].label != NULL) {
-                int len = strlen(cells[actualRow][actualCol].label);
+            if (cells[actualRow][actualCol].formula != NULL) {
 
-                for(int l = 0; l < 10; l++) {
+                float result = 0;
+
+                if (process_function(cells[actualRow][actualCol].formula, cells, &result) == 1) {
+                    cells[actualRow][actualCol].value = result;
+                }
+
+            }
+
+
+            if (cells[actualRow][actualCol].label != NULL) {
+                int stringLength = strlen(cells[actualRow][actualCol].label);
+
+                int len = stringLength < 10 ? stringLength : 10;
+
+                for(int l = 0; l < len; l++) {
                     printw("%c", cells[actualRow][actualCol].label[l]);
                 }
 
@@ -115,8 +127,6 @@ void displayTable(int currentRow, int currentCol, int displayedColumns, int disp
                     printw(" ");
                 }
 
-                // printw("%-.10s", cells[row][actualCol].label);
-                // printw("%-10ld", strlen(cells[row][actualCol].label));
             } 
             else if(cells[actualRow][actualCol].value != -1) {
 
@@ -126,13 +136,15 @@ void displayTable(int currentRow, int currentCol, int displayedColumns, int disp
 
                 sprintf(rep, "%.02f", val);
 
-                int len = strlen(rep);
+                int valueStringLength = strlen(rep);
+
+                int len = valueStringLength < 10 ? valueStringLength : 10;
 
                 for(int spc = 0; spc < 10 - len; spc++) {
                     printw(" ");
                 }
 
-                for(int l = 0; l < 10; l++) {
+                for(int l = 0; l < len; l++) {
                     printw("%c", rep[l]);
                 }
 
@@ -201,6 +213,13 @@ void handleUserInput() {
                         printf("Conversion failed. Not a valid integer.\n");
                         cells[currentRow][currentCol].label = strdup(inputBuffer);
 
+                        if(is_a_function(inputBuffer) == 1) {
+                            // executeFunction(inputBuffer)
+                            cells[currentRow][currentCol].formula = strdup(inputBuffer);
+                            // calculate
+                            cells[currentRow][currentCol].label = NULL;
+                        }
+
                     } else {
                         // Conversion successful
                         printf("Converted value: %.02f\n", result);
@@ -208,20 +227,6 @@ void handleUserInput() {
 
                     }   
 
-                    if(inputBuffer[0] == '@') {
-                        //executeFunction(inputBuffer)
-                    }
-
-                    if(strcmp("@SUM", inputBuffer) == 0) {
-
-                        int sum = 0;
-                        for(int i = 0; i < 10; i++) {
-                            sum += cells[i][currentCol].value;
-                        }
-
-                        cells[currentRow][currentCol].label = NULL;
-                        cells[currentRow][currentCol].value = (float) sum;
-                    }
                 }
 
                 // inputBuffer[0] = '\0';
@@ -234,7 +239,7 @@ void handleUserInput() {
                     x--;
                 break;
             default:
-                if (x < 10) {
+                if (x < 20) {
                     inputBuffer[x] = ch;
                     x++;
                 }

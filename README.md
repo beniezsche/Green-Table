@@ -7,6 +7,7 @@ Green Table is a rendition of VisiCalc written in C. The idea is to build a limi
 1. Functions (SUM and AVG)
 2. Format Cell (left or right)
 3. Replicate value (relative)
+4. Formulas
 
 ## Usage
 
