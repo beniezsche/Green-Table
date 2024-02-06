@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "data.h"
 
 
-enum OPERATIONS{
+enum OPERATIONS {
     SUM,
     AVG
 } ;
@@ -176,18 +177,104 @@ int validate_tokens(Token* tokens) {
         return 0;
 }
 
-void process_function(char* input) {
+int getColumn(char* cell) {
+
+    char col[3];
+    int len = 0;
+
+    while(!isdigit(*cell)) {
+        col[len] = *cell; 
+        len++;
+        cell++;
+    }
+
+
+    printf("Column: %d \n", ((int) col[0]) - 65);
+    return ((int) col[0]) - 65;
+}
+
+int getRow(char* cell) {
+
+    char row[3];
+    int len = 0;
+
+    while(*cell != '\0') {
+        if(isdigit(*cell)) {
+            row[len] = *cell; 
+            len++;
+        }
+        cell++;
+    }
+
+    int rowInt = atoi(row);
+
+    printf("Row: %d \n", rowInt);
+    return rowInt;
+
+
+}
+
+int process_function(char* input, Cell cells[][26], float* result) {
 
     Token* tokens = tokenize_visicalc_formula(input);
     // print_tokens(tokens);
 
-    if (validate_tokens(tokens) == 1)
-        printf("\nTokens validated\n");
-    else 
+    if (validate_tokens(tokens) == 1) {
+        // printf("\nTokens validated\n");
+
+        Token cell1 = tokens[3];
+        int row1 = getRow(cell1.value);
+        int col1 = getColumn(cell1.value);
+
+        Token cell2 = tokens[5];
+        int row2 = getRow(cell2.value);
+        int col2 = getColumn(cell2.value);
+
+        if (col1 != col2) {
+            free_tokens(tokens);
+            return 0;
+        }
+
+        if (strcmp(tokens[1].value, "SUM") == 0) {
+
+            for(int i = row1 - 1; i <= row2 - 1; i++) {
+                *result += cells[i][col1].value;
+            }
+        }
+
+
+
+    }
+    else {
         printf("\nTokens not validated! Write the function correctly\n");
+    }
 
 
     free_tokens(tokens);
+    return 1;
+}
+
+
+int is_a_function(char* input) {
+
+    int isValid = 0;
+
+    Token* tokens = tokenize_visicalc_formula(input);
+    // print_tokens(tokens);
+
+    if (validate_tokens(tokens) == 1) {
+        // printf("\nTokens validated\n");
+        isValid = 1;
+    }
+    else {
+        //printf("\nTokens not validated! Write the function correctly\n");
+        isValid = 0;
+    }
+
+
+    free_tokens(tokens);
+
+    return isValid;
 }
 
 
